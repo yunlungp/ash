@@ -26,12 +26,15 @@ jobs:
     - name: Increment Version
       run: python .github/scripts/increment_version.py
 
-    # 3. 提交版本号变更回仓库
+    # 3. 提交版本号变更回仓库 (先拉取最新远端提交，防止冲突)
     - name: Commit Version Bump
       run: |
         git add pubspec.yaml
-        git diff --quiet && git diff --staged --quiet || git commit -m "chore: auto-increment version number [skip ci]"
-        git push
+        if ! git diff --quiet --cached; then
+          git commit -m "chore: auto-increment version number [skip ci]"
+          git pull --rebase origin main
+          git push origin main
+        fi
 
     # 4. 设置 Java 环境（打包 Android 需要）
     - name: Set up Java
