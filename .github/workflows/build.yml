@@ -1,0 +1,60 @@
+name: Auto Increment Version and Build
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    # 1. 配置 Git 身份（用于后续自动提交更新后的版本号）
+    - name: Configure Git User
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    # 2. 运行 Python 脚本自动升级版本号
+    - name: Increment Version
+      run: python .github/scripts/increment_version.py
+
+    # 3. 提交版本号变更回仓库
+    - name: Commit Version Bump
+      run: |
+        git add pubspec.yaml
+        git diff --quiet && git diff --staged --quiet || git commit -m "chore: auto-increment version number [skip ci]"
+        git push
+
+    # 4. 设置 Java 环境（打包 Android 需要）
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    # 5. 设置 Flutter 环境
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+
+    # 6. 获取依赖并打包 Release APK
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Build APK
+      run: flutter build apk --release
+
+    # 7. 上传编译好的 APK 到 GitHub Actions 产物中
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-apk
+        path: build/app/outputs/flutter-apk/app-release.apk
