@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/character_unit.dart';
 import '../providers/battle_provider.dart';
+import '../services/update_service.dart';
 import 'dialogs/character_select_dialog.dart';
 import '../main.dart';
 
@@ -30,6 +31,18 @@ class _MainHomePageState extends State<MainHomePage> with SingleTickerProviderSt
     _pulseAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    // 每次開啟 App 首頁時，非同步檢查 GitHub 最新版本
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAppUpdate();
+    });
+  }
+
+  Future<void> _checkAppUpdate() async {
+    final update = await UpdateService.checkForUpdate();
+    if (update != null && mounted) {
+      UpdateService.promptUpdate(context, update);
+    }
   }
 
   @override

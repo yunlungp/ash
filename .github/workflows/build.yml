@@ -63,3 +63,21 @@ jobs:
       with:
         name: release-apk
         path: build/app/outputs/flutter-apk/app-release.apk
+
+    # 8. 读取最新版本号并自动发布 GitHub Release (方便 App 在线检查和下载)
+    - name: Read Version
+      id: get_version
+      run: |
+        VERSION=$(grep 'version:' pubspec.yaml | head -n 1 | awk '{print $2}')
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ steps.get_version.outputs.version }}
+        name: Release v${{ steps.get_version.outputs.version }}
+        body: |
+          Ash Bound 自动构建版本更新 v${{ steps.get_version.outputs.version }}
+        files: build/app/outputs/flutter-apk/app-release.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
