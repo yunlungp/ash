@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../models/character_unit.dart';
 import '../../models/status_effect.dart';
+import '../../utils/ui_scale.dart';
 import 'arithmetic_input_dialog.dart';
 
 class EffectDialog extends StatefulWidget {
@@ -246,19 +247,23 @@ class _EffectDialogState extends State<EffectDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.initialEffect != null;
     final screenHeight = MediaQuery.of(context).size.height;
-    final dialogMaxHeight = math.min(380.0, screenHeight * 0.94);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final ui = UiScale.of(context);
+    // 大幅放寬效果設置頁面的最大高度與寬度，確保所有控制元件充裕舒展
+    final dialogMaxHeight = math.min(ui.dp(460.0), screenHeight * 0.96);
+    final dialogMaxWidth = math.min(ui.dp(780.0), screenWidth * 0.95);
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      insetPadding: EdgeInsets.symmetric(horizontal: ui.dp(16), vertical: ui.dp(8)),
       backgroundColor: const Color(0xFF1E2430),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(ui.dp(16)),
         side: const BorderSide(color: Color(0xFF3B4860), width: 1.5),
       ),
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 680, maxHeight: dialogMaxHeight),
+        constraints: BoxConstraints(maxWidth: dialogMaxWidth, maxHeight: dialogMaxHeight),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: ui.dp(16), vertical: ui.dp(12)),
           child: Column(
             children: [
               // 頂部標題列
@@ -267,17 +272,17 @@ class _EffectDialogState extends State<EffectDialog> {
                   Icon(
                     isEditing ? Icons.edit_note : Icons.auto_awesome,
                     color: _isDebuff ? Colors.redAccent : Colors.amber,
-                    size: 20,
+                    size: ui.dp(22),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: ui.dp(8)),
                   Expanded(
                     child: Text(
                       isEditing
                           ? '編輯狀態效果 • ${widget.unit.name}'
                           : '添加狀態效果 • ${widget.unit.name}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: ui.sp(15),
                         fontWeight: FontWeight.bold,
                       ),
                       maxLines: 1,
@@ -285,33 +290,33 @@ class _EffectDialogState extends State<EffectDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                    icon: Icon(Icons.close, color: Colors.white70, size: ui.dp(22)),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 ],
               ),
-              const Divider(color: Color(0xFF334055), height: 8),
+              Divider(color: const Color(0xFF334055), height: ui.dp(10)),
 
-              // 主體左右兩欄 (橫屏最佳化：縮減預設模板比例，讓詳細自訂設定更寬裕)
+              // 主體左右兩欄
               Expanded(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 左側：預設模板列表 (flex 由 4 降至 3，收縮寬度)
+                    // 左側：預設模板列表
                     Expanded(
                       flex: 3,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 4),
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: ui.dp(4)),
                             child: Text(
                               '預設模板',
                               style: TextStyle(
                                 color: Colors.white70,
-                                fontSize: 11,
+                                fontSize: ui.sp(12),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

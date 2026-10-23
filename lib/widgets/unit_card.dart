@@ -565,70 +565,76 @@ class UnitCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 2),
-            // 第二行：按鈕靠右放置 (+效果 與 +EN / EN設定)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // +效果 按鈕
-                InkWell(
-                  onTap: () => _openAddEffectDialog(context, provider),
-                  borderRadius: BorderRadius.circular(3),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withAlpha(35),
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(color: Colors.amber.withAlpha(100), width: 0.7),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, size: 9, color: Colors.amber),
-                        Text(
-                          '效果',
-                          style: TextStyle(color: Colors.amber, fontSize: 8.5, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 3),
-                // +EN / EN設定 按鈕 (以紫色顯示)
-                InkWell(
-                  onTap: () => _openEnergyConfigDialog(context, provider),
-                  borderRadius: BorderRadius.circular(3),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
-                    decoration: BoxDecoration(
-                      color: Colors.purpleAccent.withAlpha(hasEnergy ? 50 : 25),
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(
-                        color: hasEnergy ? Colors.purpleAccent : Colors.purpleAccent.withAlpha(120),
-                        width: 0.8,
+            // 第二行：按鈕靠右放置 (效果 與 EN / EN設定，彈性適配避免窄螢幕溢出)
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // 效果 按鈕
+                  InkWell(
+                    onTap: () => _openAddEffectDialog(context, provider),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withAlpha(40),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.amber.withAlpha(140), width: 0.9),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add, size: 11, color: Colors.amber),
+                          SizedBox(width: 2),
+                          Text(
+                            '效果',
+                            style: TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          hasEnergy ? Icons.settings : Icons.add,
-                          size: 9,
-                          color: Colors.purpleAccent,
+                  ),
+                  const SizedBox(width: 4),
+                  // EN / EN設定 按鈕 (以紫色顯示，放大尺寸)
+                  InkWell(
+                    onTap: () => _openEnergyConfigDialog(context, provider),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                      decoration: BoxDecoration(
+                        color: Colors.purpleAccent.withAlpha(hasEnergy ? 55 : 30),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: hasEnergy ? Colors.purpleAccent : Colors.purpleAccent.withAlpha(140),
+                          width: 0.9,
                         ),
-                        const SizedBox(width: 1),
-                        Text(
-                          hasEnergy ? 'EN設定' : 'EN',
-                          style: const TextStyle(
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            hasEnergy ? Icons.settings : Icons.bolt,
+                            size: 11,
                             color: Colors.purpleAccent,
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.bold,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 2),
+                          Text(
+                            hasEnergy ? 'EN設定' : 'EN',
+                            style: const TextStyle(
+                              color: Colors.purpleAccent,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -678,61 +684,62 @@ class UnitCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 4),
-          // 英雄的操作按鈕區：+效果 與 +EN / EN設定 按鈕
+          const SizedBox(width: 6),
+          // 英雄的操作按鈕區：效果 與 EN / EN設定 按鈕 (放大尺寸)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               InkWell(
                 onTap: () => _openAddEffectDialog(context, provider),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(5),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withAlpha(35),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.amber.withAlpha(100), width: 0.8),
+                    color: Colors.amber.withAlpha(40),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: Colors.amber.withAlpha(140), width: 1.0),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.add, size: 10, color: Colors.amber),
+                      Icon(Icons.add, size: 12, color: Colors.amber),
+                      SizedBox(width: 2),
                       Text(
                         '效果',
-                        style: TextStyle(color: Colors.amber, fontSize: 9.5, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: Colors.amber, fontSize: 10.5, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 5),
               InkWell(
                 onTap: () => _openEnergyConfigDialog(context, provider),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(5),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
                   decoration: BoxDecoration(
-                    color: Colors.purpleAccent.withAlpha(hasEnergy ? 50 : 25),
-                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.purpleAccent.withAlpha(hasEnergy ? 55 : 30),
+                    borderRadius: BorderRadius.circular(5),
                     border: Border.all(
-                      color: hasEnergy ? Colors.purpleAccent : Colors.purpleAccent.withAlpha(120),
-                      width: 0.8,
+                      color: hasEnergy ? Colors.purpleAccent : Colors.purpleAccent.withAlpha(140),
+                      width: 1.0,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        hasEnergy ? Icons.settings : Icons.add,
-                        size: 10,
+                        hasEnergy ? Icons.settings : Icons.bolt,
+                        size: 12,
                         color: Colors.purpleAccent,
                       ),
-                      const SizedBox(width: 1),
+                      const SizedBox(width: 2),
                       Text(
-                        hasEnergy ? 'EN設定' : '+EN',
+                        hasEnergy ? 'EN設定' : 'EN',
                         style: const TextStyle(
                           color: Colors.purpleAccent,
-                          fontSize: 9.5,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -747,7 +754,7 @@ class UnitCard extends StatelessWidget {
     );
   }
 
-  /// 僅顯示 icon 和剩餘回合數的精簡標籤
+  /// 僅顯示 icon 和剩餘回合數的精簡標籤 (放大圖示與文字，顯示效果更清晰)
   Widget _buildEffectMiniBadge(
       BuildContext context, BattleProvider provider, StatusEffect effect) {
     return Tooltip(
@@ -766,24 +773,24 @@ class UnitCard extends StatelessWidget {
             },
           );
         },
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(5),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
           decoration: BoxDecoration(
-            color: effect.color.withAlpha(40),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: effect.color.withAlpha(140), width: 0.8),
+            color: effect.color.withAlpha(45),
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(color: effect.color.withAlpha(150), width: 1.0),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(effect.iconData, size: 10, color: effect.color),
-              const SizedBox(width: 2),
+              Icon(effect.iconData, size: 13, color: effect.color),
+              const SizedBox(width: 3),
               Text(
                 effect.isPermanent ? '∞' : '${effect.turnsRemaining}',
                 style: TextStyle(
                   color: effect.color,
-                  fontSize: 8.5,
+                  fontSize: 10.5,
                   fontWeight: FontWeight.w900,
                 ),
               ),
