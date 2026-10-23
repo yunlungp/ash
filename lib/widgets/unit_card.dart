@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/character_unit.dart';
 import '../models/status_effect.dart';
 import '../providers/battle_provider.dart';
+import '../utils/ui_scale.dart';
 import 'dialogs/arithmetic_input_dialog.dart';
 import 'dialogs/effect_dialog.dart';
 import 'dialogs/energy_config_dialog.dart';
@@ -391,13 +392,13 @@ class UnitCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(icon, size: 12, color: accentColor),
+                            Icon(icon, size: UiScale.of(context).dp(12), color: accentColor),
                             const SizedBox(width: 3),
                             Text(
                               statType.shortCode,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white70,
-                                fontSize: 10,
+                                fontSize: UiScale.of(context).sp(10.5),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -423,7 +424,7 @@ class UnitCard extends StatelessWidget {
                                     : bonusVal < 0
                                         ? Colors.redAccent
                                         : Colors.white,
-                                fontSize: 14,
+                                fontSize: UiScale.of(context).sp(15),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -433,7 +434,7 @@ class UnitCard extends StatelessWidget {
                                 bonusVal > 0 ? '(+$bonusVal)' : '($bonusVal)',
                                 style: TextStyle(
                                   color: bonusVal > 0 ? Colors.greenAccent : Colors.redAccent,
-                                  fontSize: 8.5,
+                                  fontSize: UiScale.of(context).sp(9),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -453,13 +454,13 @@ class UnitCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(icon, size: 12, color: accentColor),
+                          Icon(icon, size: UiScale.of(context).dp(13), color: accentColor),
                           const SizedBox(width: 2),
                           Text(
                             statType.shortCode,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white70,
-                              fontSize: 10,
+                              fontSize: UiScale.of(context).sp(10.5),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -482,7 +483,7 @@ class UnitCard extends StatelessWidget {
                                   : bonusVal < 0
                                       ? Colors.redAccent
                                       : Colors.white,
-                              fontSize: 16,
+                              fontSize: UiScale.of(context).sp(17),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -492,7 +493,7 @@ class UnitCard extends StatelessWidget {
                               bonusVal > 0 ? '(+$bonusVal)' : '($bonusVal)',
                               style: TextStyle(
                                 color: bonusVal > 0 ? Colors.greenAccent : Colors.redAccent,
-                                fontSize: 9,
+                                fontSize: UiScale.of(context).sp(9.5),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -616,7 +617,7 @@ class UnitCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 1),
                         Text(
-                          hasEnergy ? 'EN設定' : '+EN',
+                          hasEnergy ? 'EN設定' : 'EN',
                           style: const TextStyle(
                             color: Colors.purpleAccent,
                             fontSize: 8.5,

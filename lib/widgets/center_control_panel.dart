@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/character_unit.dart';
 import '../providers/battle_provider.dart';
+import '../utils/ui_scale.dart';
 import 'dialogs/character_select_dialog.dart';
 import 'dialogs/dice_dialog.dart';
 import 'dialogs/history_dialog.dart';
@@ -16,16 +17,15 @@ class CenterControlPanel extends StatelessWidget {
     final activePlayerIndex = provider.activePlayerIndex;
     final isP1Active = activePlayerIndex == 0;
     final activeColor = isP1Active ? const Color(0xFF3B82F6) : const Color(0xFFEF4444);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth >= 900;
-    final panelWidth = isTablet ? 120.0 : 104.0;
+    final ui = UiScale.of(context);
+    final panelWidth = ui.dp(106.0);
 
     return Container(
       width: panelWidth,
-      padding: EdgeInsets.symmetric(horizontal: isTablet ? 6 : 4, vertical: isTablet ? 8 : 6),
+      padding: EdgeInsets.symmetric(horizontal: ui.dp(5), vertical: ui.dp(6)),
       decoration: BoxDecoration(
         color: const Color(0xFF131722),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(ui.dp(12)),
         border: Border.all(color: const Color(0xFF263244), width: 1.2),
         boxShadow: [
           BoxShadow(
@@ -39,37 +39,37 @@ class CenterControlPanel extends StatelessWidget {
         children: [
           // 1. 上方：回合數與當前行動標籤
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: EdgeInsets.symmetric(horizontal: ui.dp(8), vertical: ui.dp(3)),
             decoration: BoxDecoration(
               color: Colors.amber.withAlpha(35),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(ui.dp(14)),
               border: Border.all(color: Colors.amber.withAlpha(120)),
             ),
             child: Text(
               'ROUND ${provider.roundNumber}',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.amberAccent,
-                fontSize: 11,
+                fontSize: ui.sp(11),
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.8,
               ),
             ),
           ),
-          const SizedBox(height: 3),
+          SizedBox(height: ui.dp(3)),
           // 當前行動方指示標籤
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            padding: EdgeInsets.symmetric(horizontal: ui.dp(6), vertical: ui.dp(3)),
             decoration: BoxDecoration(
               color: activeColor.withAlpha(45),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(ui.dp(6)),
               border: Border.all(color: activeColor, width: 1.0),
             ),
             child: Text(
               isP1Active ? '◀ P1' : 'P2 ▶',
               style: TextStyle(
                 color: activeColor,
-                fontSize: 10,
+                fontSize: ui.sp(10),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -87,21 +87,21 @@ class CenterControlPanel extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: activeColor,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                      padding: EdgeInsets.symmetric(horizontal: ui.dp(4), vertical: ui.dp(8)),
                       elevation: 4,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(ui.dp(10)),
                       ),
                     ),
-                    child: const Column(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.sync_alt, size: 20),
-                        SizedBox(height: 2),
+                        Icon(Icons.sync_alt, size: ui.dp(22)),
+                        SizedBox(height: ui.dp(3)),
                         Text(
                           '結束回合',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: ui.sp(13),
                             fontWeight: FontWeight.w900,
                             letterSpacing: 0.5,
                           ),
@@ -122,7 +122,7 @@ class CenterControlPanel extends StatelessWidget {
               // 甩骰子按鈕
               SizedBox(
                 width: double.infinity,
-                height: 32,
+                height: ui.dp(34),
                 child: ElevatedButton.icon(
                   onPressed: () {
                     DiceDialog.show(
@@ -135,11 +135,11 @@ class CenterControlPanel extends StatelessWidget {
                       },
                     );
                   },
-                  icon: const Icon(Icons.casino, size: 15, color: Colors.black),
-                  label: const Text(
+                  icon: Icon(Icons.casino, size: ui.dp(16), color: Colors.black),
+                  label: Text(
                     '骰子',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: ui.sp(11.5),
                       fontWeight: FontWeight.w900,
                       color: Colors.black,
                     ),
@@ -149,18 +149,18 @@ class CenterControlPanel extends StatelessWidget {
                     foregroundColor: Colors.black,
                     elevation: 2,
                     padding: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ui.dp(8))),
                   ),
                 ),
               ),
-              const SizedBox(height: 5),
+              SizedBox(height: ui.dp(5)),
 
-              // 復原 (Undo) 與 歷史紀錄 雙按鈕並列（只顯示 icon，保留最大空間給兩側玩家）
+              // 復原 (Undo) 與 歷史紀錄 雙按鈕並列
               Row(
                 children: [
                   Expanded(
                     child: SizedBox(
-                      height: 32,
+                      height: ui.dp(32),
                       child: Tooltip(
                         message: '復原上一步 (可復原: ${provider.undoCount})',
                         child: OutlinedButton(
@@ -175,17 +175,17 @@ class CenterControlPanel extends StatelessWidget {
                               width: 1.0,
                             ),
                             padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ui.dp(6))),
                           ),
-                          child: const Icon(Icons.undo, size: 16),
+                          child: Icon(Icons.undo, size: ui.dp(17)),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: ui.dp(4)),
                   Expanded(
                     child: SizedBox(
-                      height: 32,
+                      height: ui.dp(32),
                       child: Tooltip(
                         message: '戰局歷史紀錄 (${provider.logs.length}筆)',
                         child: OutlinedButton(
@@ -199,21 +199,21 @@ class CenterControlPanel extends StatelessWidget {
                             foregroundColor: Colors.cyanAccent,
                             side: BorderSide(color: Colors.cyanAccent.withAlpha(160), width: 1.0),
                             padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ui.dp(6))),
                           ),
-                          child: const Icon(Icons.history, size: 16),
+                          child: Icon(Icons.history, size: ui.dp(17)),
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 5),
+              SizedBox(height: ui.dp(5)),
 
-              // 結束遊戲按鈕 (精簡高度)
+              // 結束遊戲按鈕
               SizedBox(
                 width: double.infinity,
-                height: 28,
+                height: ui.dp(30),
                 child: Tooltip(
                   message: '提前結束遊戲',
                   child: OutlinedButton(
@@ -222,17 +222,17 @@ class CenterControlPanel extends StatelessWidget {
                       foregroundColor: Colors.redAccent,
                       side: BorderSide(color: Colors.redAccent.withAlpha(140), width: 1.0),
                       padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ui.dp(6))),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.stop_circle_outlined, size: 13),
-                        SizedBox(width: 3),
+                        Icon(Icons.stop_circle_outlined, size: ui.dp(14)),
+                        SizedBox(width: ui.dp(3)),
                         Text(
                           '結束',
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: ui.sp(10.5), fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),

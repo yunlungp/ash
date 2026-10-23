@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/character_unit.dart';
 import '../providers/battle_provider.dart';
+import '../utils/ui_scale.dart';
 import 'unit_card.dart';
 
 /// 拖曳小兵的資料模型
@@ -68,18 +69,19 @@ class MinionsSection extends StatelessWidget {
         const SizedBox(height: 3),
 
         // 下方操作提示：長按小兵可拖曳移動至對方小兵格子
-        _buildDragDropHint(isPlayer1),
+        _buildDragDropHint(context, isPlayer1),
       ],
     );
   }
 
   /// 提示玩家長按小兵可拖曳移動
-  Widget _buildDragDropHint(bool isPlayer1) {
+  Widget _buildDragDropHint(BuildContext context, bool isPlayer1) {
+    final ui = UiScale.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: ui.dp(6), vertical: ui.dp(2)),
       decoration: BoxDecoration(
         color: const Color(0xFF131822),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(ui.dp(4)),
         border: Border.all(color: const Color(0xFF273344), width: 0.6),
       ),
       child: Row(
@@ -87,16 +89,16 @@ class MinionsSection extends StatelessWidget {
         children: [
           Icon(
             Icons.touch_app,
-            size: 11,
+            size: ui.dp(12),
             color: isPlayer1 ? Colors.blueAccent : Colors.redAccent,
           ),
-          const SizedBox(width: 4),
-          const Flexible(
+          SizedBox(width: ui.dp(4)),
+          Flexible(
             child: Text(
               '提示：長按小兵可拖曳移至對方格子',
               style: TextStyle(
                 color: Colors.white70,
-                fontSize: 9,
+                fontSize: ui.sp(9.5),
                 fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
@@ -112,12 +114,13 @@ class MinionsSection extends StatelessWidget {
   Widget _buildPassiveBuffIndicator(BuildContext context, BattleProvider provider, int aliveCount, bool isPlayer1) {
     final color = isPlayer1 ? Colors.blueAccent : Colors.redAccent;
     final isPassiveOn = provider.isPassiveEnabled(playerIndex);
+    final ui = UiScale.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+      padding: EdgeInsets.symmetric(horizontal: ui.dp(6), vertical: ui.dp(2)),
       decoration: BoxDecoration(
         color: const Color(0xFF131822),
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(ui.dp(5)),
         border: Border.all(
           color: isPassiveOn ? const Color(0xFF273344) : Colors.white12,
         ),
@@ -126,15 +129,15 @@ class MinionsSection extends StatelessWidget {
         children: [
           Icon(
             Icons.hub,
-            size: 11,
+            size: ui.dp(12),
             color: isPassiveOn ? color : Colors.white24,
           ),
-          const SizedBox(width: 3),
+          SizedBox(width: ui.dp(4)),
           Text(
             '小兵 ($aliveCount/3): ',
             style: TextStyle(
               color: isPassiveOn ? Colors.white70 : Colors.white38,
-              fontSize: 9,
+              fontSize: ui.sp(9.5),
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -145,22 +148,22 @@ class MinionsSection extends StatelessWidget {
                 opacity: isPassiveOn ? 1.0 : 0.35,
                 child: Row(
                   children: [
-                    _buffBadge('1: RNG+1', aliveCount >= 1 && isPassiveOn),
-                    const SizedBox(width: 3),
-                    _buffBadge('2: MOV+1', aliveCount >= 2 && isPassiveOn),
-                    const SizedBox(width: 3),
-                    _buffBadge('3: ATK+10', aliveCount >= 3 && isPassiveOn),
+                    _buffBadge(ui, '1: RNG+1', aliveCount >= 1 && isPassiveOn),
+                    SizedBox(width: ui.dp(4)),
+                    _buffBadge(ui, '2: MOV+1', aliveCount >= 2 && isPassiveOn),
+                    SizedBox(width: ui.dp(4)),
+                    _buffBadge(ui, '3: ATK+10', aliveCount >= 3 && isPassiveOn),
                   ],
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: ui.dp(4)),
           // 右方設置開關：預設開，只有打開小兵才會根據數量增加效果，反之不增加
           Tooltip(
             message: isPassiveOn ? '小兵數量被動加成：已開啟' : '小兵數量被動加成：已關閉',
             child: Transform.scale(
-              scale: 0.65,
+              scale: ui.scale >= 1.2 ? 0.8 : 0.65,
               child: Switch(
                 value: isPassiveOn,
                 activeThumbColor: color,
@@ -179,12 +182,12 @@ class MinionsSection extends StatelessWidget {
     );
   }
 
-  Widget _buffBadge(String text, bool isActive) {
+  Widget _buffBadge(UiScale ui, String text, bool isActive) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+      padding: EdgeInsets.symmetric(horizontal: ui.dp(4), vertical: ui.dp(1.5)),
       decoration: BoxDecoration(
         color: isActive ? Colors.amber.withAlpha(50) : Colors.white.withAlpha(10),
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: BorderRadius.circular(ui.dp(3)),
         border: Border.all(
           color: isActive ? Colors.amber : Colors.white24,
           width: 0.8,
@@ -194,7 +197,7 @@ class MinionsSection extends StatelessWidget {
         text,
         style: TextStyle(
           color: isActive ? Colors.amberAccent : Colors.white38,
-          fontSize: 8.5,
+          fontSize: ui.sp(9),
           fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
         ),
       ),
