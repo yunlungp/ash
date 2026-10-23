@@ -16,10 +16,13 @@ class CenterControlPanel extends StatelessWidget {
     final activePlayerIndex = provider.activePlayerIndex;
     final isP1Active = activePlayerIndex == 0;
     final activeColor = isP1Active ? const Color(0xFF3B82F6) : const Color(0xFFEF4444);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 900;
+    final panelWidth = isTablet ? 120.0 : 104.0;
 
     return Container(
-      width: 104,
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      width: panelWidth,
+      padding: EdgeInsets.symmetric(horizontal: isTablet ? 6 : 4, vertical: isTablet ? 8 : 6),
       decoration: BoxDecoration(
         color: const Color(0xFF131722),
         borderRadius: BorderRadius.circular(12),

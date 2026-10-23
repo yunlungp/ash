@@ -93,25 +93,30 @@ class PlayerPanel extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // 英雄主卡片
-                    UnitCard(
-                      unit: hero,
-                      isPlayer1: isPlayer1,
-                      isCompact: false,
-                    ),
-                    const SizedBox(height: 3),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isLargeScreen = constraints.maxHeight >= 420;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // 英雄主卡片
+                        UnitCard(
+                          unit: hero,
+                          isPlayer1: isPlayer1,
+                          isCompact: false,
+                        ),
+                        SizedBox(height: isLargeScreen ? 6 : 3),
 
-                    // 下方 3 個小兵槽位
-                    Expanded(
-                      child: MinionsSection(
-                        playerIndex: playerIndex,
-                        minions: minions,
-                      ),
-                    ),
-                  ],
+                        // 下方 3 個小兵槽位
+                        Expanded(
+                          child: MinionsSection(
+                            playerIndex: playerIndex,
+                            minions: minions,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),

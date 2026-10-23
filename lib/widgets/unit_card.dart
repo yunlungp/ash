@@ -409,59 +409,68 @@ class UnitCard extends StatelessWidget {
             border: Border.all(color: const Color(0xFF2E3A4E)),
           ),
           child: isCompact
-              ? FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(icon, size: 11, color: accentColor),
-                          const SizedBox(width: 3),
-                          Text(
-                            statType.shortCode,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 4),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            '$effectiveVal',
-                            style: TextStyle(
-                              color: bonusVal > 0
-                                  ? Colors.greenAccent
-                                  : bonusVal < 0
-                                      ? Colors.redAccent
-                                      : Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (bonusVal != 0) ...[
-                            const SizedBox(width: 1),
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(icon, size: 12, color: accentColor),
+                            const SizedBox(width: 3),
                             Text(
-                              bonusVal > 0 ? '(+$bonusVal)' : '($bonusVal)',
-                              style: TextStyle(
-                                color: bonusVal > 0 ? Colors.greenAccent : Colors.redAccent,
-                                fontSize: 8,
+                              statType.shortCode,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 10,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
-                        ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              '$effectiveVal',
+                              style: TextStyle(
+                                color: bonusVal > 0
+                                    ? Colors.greenAccent
+                                    : bonusVal < 0
+                                        ? Colors.redAccent
+                                        : Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (bonusVal != 0) ...[
+                              const SizedBox(width: 1),
+                              Text(
+                                bonusVal > 0 ? '(+$bonusVal)' : '($bonusVal)',
+                                style: TextStyle(
+                                  color: bonusVal > 0 ? Colors.greenAccent : Colors.redAccent,
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 )
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,

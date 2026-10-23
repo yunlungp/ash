@@ -108,10 +108,16 @@ class _BattleFieldScreenState extends State<BattleFieldScreen> {
       });
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 900;
+    final horizontalPadding = isTablet ? 12.0 : 6.0;
+    final verticalPadding = isTablet ? 8.0 : 4.0;
+    final panelSpacing = isTablet ? 10.0 : 6.0;
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -121,12 +127,12 @@ class _BattleFieldScreenState extends State<BattleFieldScreen> {
                 child: PlayerPanel(playerIndex: 0),
               ),
 
-              const SizedBox(width: 6),
+              SizedBox(width: panelSpacing),
 
               // 中間全域控制按鈕 (結束回合置中，骰子與輔助按鈕置於下方)
               const CenterControlPanel(),
 
-              const SizedBox(width: 6),
+              SizedBox(width: panelSpacing),
 
               // 右方玩家 (Player 2)
               const Expanded(
