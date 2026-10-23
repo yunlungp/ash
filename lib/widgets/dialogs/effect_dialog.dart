@@ -246,7 +246,7 @@ class _EffectDialogState extends State<EffectDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.initialEffect != null;
     final screenHeight = MediaQuery.of(context).size.height;
-    final dialogMaxHeight = math.min(350.0, screenHeight * 0.94);
+    final dialogMaxHeight = math.min(380.0, screenHeight * 0.94);
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -256,7 +256,7 @@ class _EffectDialogState extends State<EffectDialog> {
         side: const BorderSide(color: Color(0xFF3B4860), width: 1.5),
       ),
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 660, maxHeight: dialogMaxHeight),
+        constraints: BoxConstraints(maxWidth: 680, maxHeight: dialogMaxHeight),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Column(

@@ -126,34 +126,6 @@ class UnitCard extends StatelessWidget {
                 ),
               ),
             ),
-            // 添加效果按鈕
-            InkWell(
-              onTap: () => _openAddEffectDialog(context, provider),
-              borderRadius: BorderRadius.circular(4),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withAlpha(45),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.amber.withAlpha(140)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add, size: 11, color: Colors.amber),
-                    SizedBox(width: 2),
-                    Text(
-                      '效果',
-                      style: TextStyle(
-                        color: Colors.amber,
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       );
@@ -1055,11 +1027,11 @@ class UnitCard extends StatelessWidget {
                       // 狀態效果列表
                       unit.effects.isEmpty
                           ? const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20),
+                              padding: EdgeInsets.symmetric(vertical: 24),
                               child: Center(
                                 child: Text(
                                   '目前沒有任何掛載狀態效果',
-                                  style: TextStyle(color: Colors.white54, fontSize: 13),
+                                  style: TextStyle(color: Colors.white38, fontSize: 13),
                                 ),
                               ),
                             )
