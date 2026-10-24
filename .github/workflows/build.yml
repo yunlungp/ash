@@ -50,12 +50,24 @@ jobs:
         channel: 'stable'
         cache: true
 
-    # 6. 获取依赖并打包 Release APK
+    # 6. 获取依赖并准备签名金钥，然后打包 Release APK
     - name: Install dependencies
       run: flutter pub get
 
+    - name: Decode Keystore
+      if: "${{ env.KEYSTORE_BASE64 != '' }}"
+      run: |
+        echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
     - name: Build APK
       run: flutter build apk --release
+      env:
+        KEYSTORE_PATH: "upload-keystore.jks"
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
     # 7. 上传编译好的 APK 到 GitHub Actions 产物中
     - name: Upload APK Artifact
