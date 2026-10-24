@@ -97,75 +97,40 @@ class _MainHomePageState extends State<MainHomePage> with SingleTickerProviderSt
               ),
             ),
 
-            // 主內容中央標題與呼吸燈提示
+            // 主內容中央放大白底 Logo、白色 Ash Bound 標題與呼吸燈提示
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 頂部副標題
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withAlpha(25),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.amber.withAlpha(90)),
-                    ),
-                    child: const Text(
-                      'BOARD GAME BATTLE SYSTEM',
-                      style: TextStyle(
-                        color: Colors.amberAccent,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2.5,
-                      ),
-                    ),
+                  // 放大的白色火焰 Logo
+                  Image.asset(
+                    'photo/LOGO bai.png',
+                    height: 140,
+                    fit: BoxFit.contain,
                   ),
 
                   const SizedBox(height: 12),
 
-                  // 主標題: Ash Bound (帶發光漸變效果)
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Color(0xFFFFD54F),
-                        Color(0xFFFF8A65),
-                        Color(0xFFFF5252),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ).createShader(bounds),
-                    child: const Text(
-                      'Ash Bound',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 54,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 4.0,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black87,
-                            offset: Offset(0, 4),
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
+                  // 標題換成純白色放在 Logo 的正下方
                   const Text(
-                    '戰 局 數 據 紀 錄 與 戰 鬥 決 策 終 端',
+                    'Ash Bound',
                     style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 12,
-                      letterSpacing: 3.0,
-                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontSize: 46,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 4.0,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black,
+                          offset: Offset(0, 3),
+                          blurRadius: 10,
+                        ),
+                      ],
                     ),
                   ),
 
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 28),
 
                   // 點擊螢幕開始遊戲提示 (帶呼吸效果)
                   AnimatedBuilder(
