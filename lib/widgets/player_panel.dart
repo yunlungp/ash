@@ -44,68 +44,23 @@ class PlayerPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 玩家狀態頂部橫條
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-              color: themeColor.withAlpha(isActiveTurn ? 45 : 20),
-              child: Row(
-                children: [
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isActiveTurn ? themeColor : Colors.white24,
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    isPlayer1 ? 'PLAYER 1 (藍方)' : 'PLAYER 2 (紅方)',
-                    style: TextStyle(
-                      color: themeColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (isActiveTurn)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: themeColor,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: const Text(
-                        '行動中',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
             // 主卡片與小兵展示區 (縮小英雄所佔空間，預留更多高度給小兵)
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
+                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final isLargeScreen = constraints.maxHeight >= 420;
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // 英雄主卡片
+                        // 英雄主卡片 (頂部已整合「行動中」標籤，不再需要單獨的頂部藍紅條)
                         UnitCard(
                           unit: hero,
                           isPlayer1: isPlayer1,
                           isCompact: false,
                         ),
-                        SizedBox(height: isLargeScreen ? 6 : 3),
+                        SizedBox(height: isLargeScreen ? 3 : 1),
 
                         // 下方 3 個小兵槽位
                         Expanded(

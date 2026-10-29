@@ -68,6 +68,8 @@ class CharacterUnit {
   int maxEnergy; // 能量上限
   List<StatusEffect> effects;
 
+  final String? presetId; // 對應的 HeroPreset ID (如 'eris', 'luna', 'tinna', 'custom')
+
   // 小兵數量連動的額外被動加成（由 Provider 動態更新到小兵）
   int passiveAtkBonus;
   int passiveRangeBonus;
@@ -77,6 +79,7 @@ class CharacterUnit {
     required this.id,
     required this.name,
     required this.isHero,
+    this.presetId,
     this.slotIndex,
     this.originalOwnerIndex = 0,
     this.spawnOrder = 1,
@@ -102,6 +105,7 @@ class CharacterUnit {
   factory CharacterUnit.createHero({
     required String id,
     required String name,
+    String? presetId,
     int ownerIndex = 0,
     String? avatarAsset,
     int hp = 100,
@@ -109,11 +113,16 @@ class CharacterUnit {
     int atk = 15,
     int range = 2,
     int move = 3,
+    int? currentEnergy,
+    int energyPerTurnDelta = 0,
+    int minEnergy = 0,
+    int maxEnergy = 100,
   }) {
     return CharacterUnit(
       id: id,
       name: name,
       isHero: true,
+      presetId: presetId,
       originalOwnerIndex: ownerIndex,
       avatarAsset: avatarAsset,
       baseHp: hp,
@@ -122,6 +131,10 @@ class CharacterUnit {
       baseAtk: atk,
       baseRange: range,
       baseMove: move,
+      currentEnergy: currentEnergy,
+      energyPerTurnDelta: energyPerTurnDelta,
+      minEnergy: minEnergy,
+      maxEnergy: maxEnergy,
       effects: [],
     );
   }
@@ -258,6 +271,7 @@ class CharacterUnit {
       id: id,
       name: name,
       isHero: isHero,
+      presetId: presetId,
       slotIndex: slotIndex,
       originalOwnerIndex: originalOwnerIndex,
       spawnOrder: spawnOrder,

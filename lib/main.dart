@@ -69,7 +69,12 @@ class _BattleFieldScreenState extends State<BattleFieldScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<BattleProvider>();
 
-    // 監聽生命值歸零自動結束遊戲
+    // 若遊戲已重新開始，重設標記
+    if (!provider.isGameOver && _gameOverDialogShown) {
+      _gameOverDialogShown = false;
+    }
+
+    // 監聽生命值歸零或手動結束遊戲，自動彈出結算對話框
     if (provider.isGameOver && !_gameOverDialogShown) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _gameOverDialogShown) return;
@@ -85,7 +90,6 @@ class _BattleFieldScreenState extends State<BattleFieldScreen> {
                   : '勝利者產生！',
           reason: provider.gameOverReason ?? '遊戲結束',
           onRestart: () {
-            _gameOverDialogShown = false;
             CharacterSelectDialog.show(
               context: context,
               initialStartingPlayer: 0,
@@ -103,7 +107,11 @@ class _BattleFieldScreenState extends State<BattleFieldScreen> {
             );
           },
         ).then((_) {
-          _gameOverDialogShown = false;
+          // 當對話框被關閉時，若遊戲尚未重啟（isGameOver 仍為 true），保持標記避免重新彈出；
+          // 只有當遊戲已被重啟 (isGameOver 變為 false) 時，重設標記
+          if (!provider.isGameOver) {
+            _gameOverDialogShown = false;
+          }
         });
       });
     }

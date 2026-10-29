@@ -25,6 +25,7 @@ class UnitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.read<BattleProvider>();
     final isHero = unit.isHero;
+    final unitHero = provider.getHero(unit.originalOwnerIndex);
     // 依據原始建立者決定 header 和 icon 顏色（移動後小兵仍保留原本顏色）
     final originColor = unit.originalOwnerIndex == 0
         ? const Color(0xFF3B82F6)
@@ -80,12 +81,14 @@ class UnitCard extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, BattleProvider provider, Color primaryColor) {
+    final ui = UiScale.of(context);
     if (unit.isHero) {
-      // Player 英雄 Header：顯示六邊形頭像、名字、添加效果
+      final isActiveTurn = provider.activePlayerIndex == (isPlayer1 ? 0 : 1);
+      // Player 英雄 Header：顯示六邊形頭像、名字，並在同一行右側顯示「行動中」標籤
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        padding: EdgeInsets.symmetric(horizontal: ui.dp(8), vertical: ui.dp(3)),
         decoration: BoxDecoration(
-          color: primaryColor.withAlpha(30),
+          color: primaryColor.withAlpha(isActiveTurn ? 45 : 25),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(7)),
           border: Border(bottom: BorderSide(color: primaryColor.withAlpha(50))),
         ),
@@ -94,12 +97,12 @@ class UnitCard extends StatelessWidget {
             // 六邊形角色頭像
             HexagonAvatar(
               imageAsset: unit.avatarAsset,
-              size: 26,
+              size: ui.dp(24),
               borderColor: primaryColor,
               borderWidth: 1.5,
-              fallbackChild: Icon(Icons.shield, size: 14, color: primaryColor),
+              fallbackChild: Icon(Icons.shield, size: ui.dp(13), color: primaryColor),
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: ui.dp(6)),
             Expanded(
               child: InkWell(
                 onTap: () => _showAllEffectsDialog(context, provider),
@@ -111,9 +114,9 @@ class UnitCard extends StatelessWidget {
                       Flexible(
                         child: Text(
                           unit.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 12,
+                            fontSize: ui.sp(12.5),
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 1,
@@ -127,6 +130,23 @@ class UnitCard extends StatelessWidget {
                 ),
               ),
             ),
+            // 行動中的 label 整合在角色名字同一行
+            if (isActiveTurn)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: ui.dp(5), vertical: ui.dp(1.5)),
+                decoration: BoxDecoration(
+                  color: primaryColor,
+                  borderRadius: BorderRadius.circular(ui.dp(3)),
+                ),
+                child: Text(
+                  '行動中',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: ui.sp(9),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
           ],
         ),
       );
@@ -138,6 +158,7 @@ class UnitCard extends StatelessWidget {
     // 3. 刪除 icon 移回和名字同一排
     // 4. 小兵名字完整顯示
     final minionOrder = unit.spawnOrder;
+    final unitHero = provider.getHero(unit.originalOwnerIndex);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
@@ -188,39 +209,40 @@ class UnitCard extends StatelessWidget {
               ),
             ),
           ),
-          // 小兵的 level 放在打叉 (X) 的左邊，點擊可直接切換等級
-          InkWell(
-            onTap: () => _showLevelSelectMenu(context, provider),
-            borderRadius: BorderRadius.circular(3),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-              decoration: BoxDecoration(
-                color: unit.level != null ? Colors.amber.withAlpha(50) : const Color(0xFF242F42),
-                borderRadius: BorderRadius.circular(3),
-                border: Border.all(
-                  color: unit.level != null ? Colors.amber : const Color(0xFF3B4A60),
-                  width: 0.8,
+          // 小兵的 level 放在打叉 (X) 的左邊：eris 和 luna 不能設定小兵 level (不顯示按鈕)，只有非 eris/luna (如 tinna) 允許設定
+          if (unitHero.presetId != 'eris' && unitHero.presetId != 'luna')
+            InkWell(
+              onTap: () => _showLevelSelectMenu(context, provider),
+              borderRadius: BorderRadius.circular(3),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: unit.level != null ? Colors.amber.withAlpha(50) : const Color(0xFF242F42),
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(
+                    color: unit.level != null ? Colors.amber : const Color(0xFF3B4A60),
+                    width: 0.8,
+                  ),
                 ),
-              ),
-              child: Text(
-                unit.level != null ? 'Lv.${unit.level}' : 'Lv.',
-                style: TextStyle(
-                  color: unit.level != null ? Colors.amberAccent : Colors.white60,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w900,
+                child: Text(
+                  unit.level != null ? 'Lv.${unit.level}' : 'Lv.',
+                  style: TextStyle(
+                    color: unit.level != null ? Colors.amberAccent : Colors.white60,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ),
-          ),
           if (unit.slotIndex != null) ...[
             const SizedBox(width: 3),
-            // 刪除 icon 緊接在 level 右邊
+            // 刪除 icon 緊接在右邊
             InkWell(
               onTap: () => _showDismissConfirm(context, provider),
               borderRadius: BorderRadius.circular(3),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-                child: const Icon(Icons.close, size: 14, color: Colors.white70),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+                child: Icon(Icons.close, size: 14, color: Colors.white70),
               ),
             ),
           ],
@@ -392,13 +414,13 @@ class UnitCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(icon, size: UiScale.of(context).dp(12), color: accentColor),
+                            Icon(icon, size: 13, color: accentColor),
                             const SizedBox(width: 3),
                             Text(
                               statType.shortCode,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white70,
-                                fontSize: UiScale.of(context).sp(10.5),
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -424,7 +446,7 @@ class UnitCard extends StatelessWidget {
                                     : bonusVal < 0
                                         ? Colors.redAccent
                                         : Colors.white,
-                                fontSize: UiScale.of(context).sp(15),
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -434,7 +456,7 @@ class UnitCard extends StatelessWidget {
                                 bonusVal > 0 ? '(+$bonusVal)' : '($bonusVal)',
                                 style: TextStyle(
                                   color: bonusVal > 0 ? Colors.greenAccent : Colors.redAccent,
-                                  fontSize: UiScale.of(context).sp(9),
+                                  fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -514,6 +536,7 @@ class UnitCard extends StatelessWidget {
     final hasOverflow = totalEffects > maxVisible;
     final displayEffects = unit.effects.take(maxVisible).toList();
     final hasEnergy = unit.currentEnergy != null;
+    final unitHero = provider.getHero(unit.originalOwnerIndex);
 
     // 小兵：第一行橫向展示效果 icons (最多 2 個效果 + 1 個 "+N")
     // 下一行靠右放置：+效果 與 +EN / EN設定 按鈕
@@ -598,41 +621,42 @@ class UnitCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  // EN / EN設定 按鈕 (以紫色顯示，放大尺寸)
-                  InkWell(
-                    onTap: () => _openEnergyConfigDialog(context, provider),
-                    borderRadius: BorderRadius.circular(4),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                      decoration: BoxDecoration(
-                        color: Colors.purpleAccent.withAlpha(hasEnergy ? 55 : 30),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: hasEnergy ? Colors.purpleAccent : Colors.purpleAccent.withAlpha(140),
-                          width: 0.9,
+                  // EN / EN設定 按鈕 (只有自訂角色 'custom' 及其小兵允許手動開關與配置能量系統)
+                  if (unitHero.presetId == 'custom')
+                    InkWell(
+                      onTap: () => _openEnergyConfigDialog(context, provider),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: Colors.purpleAccent.withAlpha(hasEnergy ? 55 : 30),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: hasEnergy ? Colors.purpleAccent : Colors.purpleAccent.withAlpha(140),
+                            width: 0.9,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              hasEnergy ? Icons.settings : Icons.bolt,
+                              size: 11,
+                              color: Colors.purpleAccent,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              hasEnergy ? 'EN設定' : 'EN',
+                              style: const TextStyle(
+                                color: Colors.purpleAccent,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            hasEnergy ? Icons.settings : Icons.bolt,
-                            size: 11,
-                            color: Colors.purpleAccent,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            hasEnergy ? 'EN設定' : 'EN',
-                            style: const TextStyle(
-                              color: Colors.purpleAccent,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -712,41 +736,43 @@ class UnitCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 5),
-              InkWell(
-                onTap: () => _openEnergyConfigDialog(context, provider),
-                borderRadius: BorderRadius.circular(5),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                  decoration: BoxDecoration(
-                    color: Colors.purpleAccent.withAlpha(hasEnergy ? 55 : 30),
-                    borderRadius: BorderRadius.circular(5),
-                    border: Border.all(
-                      color: hasEnergy ? Colors.purpleAccent : Colors.purpleAccent.withAlpha(140),
-                      width: 1.0,
+              if (unitHero.presetId == 'custom') ...[
+                const SizedBox(width: 5),
+                InkWell(
+                  onTap: () => _openEnergyConfigDialog(context, provider),
+                  borderRadius: BorderRadius.circular(5),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                    decoration: BoxDecoration(
+                      color: Colors.purpleAccent.withAlpha(hasEnergy ? 55 : 30),
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                        color: hasEnergy ? Colors.purpleAccent : Colors.purpleAccent.withAlpha(140),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          hasEnergy ? Icons.settings : Icons.bolt,
+                          size: 12,
+                          color: Colors.purpleAccent,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          hasEnergy ? 'EN設定' : 'EN',
+                          style: const TextStyle(
+                            color: Colors.purpleAccent,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        hasEnergy ? Icons.settings : Icons.bolt,
-                        size: 12,
-                        color: Colors.purpleAccent,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        hasEnergy ? 'EN設定' : 'EN',
-                        style: const TextStyle(
-                          color: Colors.purpleAccent,
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ],
@@ -754,7 +780,7 @@ class UnitCard extends StatelessWidget {
     );
   }
 
-  /// 僅顯示 icon 和剩餘回合數的精簡標籤 (放大圖示與文字，顯示效果更清晰)
+  /// 僅顯示 icon 和剩餘回合數的精簡標籤 (適中精準尺寸，避免過大)
   Widget _buildEffectMiniBadge(
       BuildContext context, BattleProvider provider, StatusEffect effect) {
     return Tooltip(
@@ -773,24 +799,24 @@ class UnitCard extends StatelessWidget {
             },
           );
         },
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(4),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
           decoration: BoxDecoration(
-            color: effect.color.withAlpha(45),
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: effect.color.withAlpha(150), width: 1.0),
+            color: effect.color.withAlpha(40),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: effect.color.withAlpha(140), width: 0.8),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(effect.iconData, size: 13, color: effect.color),
-              const SizedBox(width: 3),
+              Icon(effect.iconData, size: 11, color: effect.color),
+              const SizedBox(width: 2.5),
               Text(
                 effect.isPermanent ? '∞' : '${effect.turnsRemaining}',
                 style: TextStyle(
                   color: effect.color,
-                  fontSize: 10.5,
+                  fontSize: 9.5,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -803,6 +829,8 @@ class UnitCard extends StatelessWidget {
 
   /// 點擊小兵等級按鈕時彈出選擇 Lv1 到 Lv3 的選單
   void _showLevelSelectMenu(BuildContext context, BattleProvider provider) {
+    final unitHero = provider.getHero(unit.originalOwnerIndex);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1B2330),
@@ -829,7 +857,8 @@ class UnitCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    if (unit.level != null)
+                    // Tinna 的小兵不允許清除等級 (無法消除 lv)；只有自訂角色的小兵可清除
+                    if (unit.level != null && unitHero.presetId != 'tinna')
                       TextButton(
                         onPressed: () {
                           provider.setMinionLevel(unitId: unit.id, level: null);
@@ -884,6 +913,8 @@ class UnitCard extends StatelessWidget {
   /// 點擊單位名字時彈出查看與管理所有效果的彈窗 (玩家亦可在這裡更改小兵名字)
   void _showAllEffectsDialog(BuildContext context, BattleProvider provider) {
     final nameController = TextEditingController(text: unit.name);
+
+    final unitHero = provider.getHero(unit.originalOwnerIndex);
 
     showDialog(
       context: context,
@@ -962,21 +993,22 @@ class UnitCard extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.purpleAccent,
-                                  side: const BorderSide(color: Colors.purpleAccent, width: 0.8),
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              if (unitHero.presetId == 'custom')
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.purpleAccent,
+                                    side: const BorderSide(color: Colors.purpleAccent, width: 0.8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.settings, size: 12),
+                                  label: const Text('EN設定', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                  onPressed: () {
+                                    Navigator.of(ctx).pop();
+                                    _openEnergyConfigDialog(context, provider);
+                                  },
                                 ),
-                                icon: const Icon(Icons.settings, size: 12),
-                                label: const Text('EN設定', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                                onPressed: () {
-                                  Navigator.of(ctx).pop();
-                                  _openEnergyConfigDialog(context, provider);
-                                },
-                              ),
                             ],
                           ),
                         ),

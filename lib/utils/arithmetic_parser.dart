@@ -21,6 +21,7 @@ class ArithmeticParser {
   /// - `-N` (減法，例如 -10)
   /// - `*N` 或 `xN` (乘法，例如 *2)
   /// - `/N` (除法，例如 /2，整數除法，避免除以0)
+  /// - `A+B`, `A-B`, `A*B`, `A/B` (原本數值運算式，例如 80-10, 80+5, 10*2)
   /// - `%N` (百分比計算，例如 %50 表示原值的 50%)
   /// - `+N%` (加百分比，例如 +20%)
   /// - `-N%` (減百分比，例如 -20%)
@@ -41,6 +42,40 @@ class ArithmeticParser {
     }
 
     try {
+      // 0. 支援一般二元算式（當輸入框帶有原本數值時，如 80+10, 80-20, 80*2, 80/2）
+      final binaryMatch = RegExp(r'^(\d+)([\+\-\*xX\/])(\d+)$').firstMatch(raw);
+      if (binaryMatch != null) {
+        final a = int.parse(binaryMatch.group(1)!);
+        final op = binaryMatch.group(2)!;
+        final b = int.parse(binaryMatch.group(3)!);
+        int res;
+        String opSymbol;
+
+        if (op == '+') {
+          res = a + b;
+          opSymbol = '+';
+        } else if (op == '-') {
+          res = a - b;
+          opSymbol = '-';
+        } else if (op == '*' || op == 'x' || op == 'X') {
+          res = a * b;
+          opSymbol = '×';
+        } else if (op == '/') {
+          if (b == 0) return _error(currentValue, '除數不能為 0');
+          res = (a / b).round();
+          opSymbol = '÷';
+        } else {
+          res = a;
+          opSymbol = '?';
+        }
+
+        final finalVal = allowNegative ? res : (res < 0 ? 0 : res);
+        return ArithmeticParseResult(
+          isValid: true,
+          newValue: finalVal,
+          operationSummary: '$a $opSymbol $b = $finalVal',
+        );
+      }
       // 1. 加百分比模式: +20%
       if (raw.startsWith('+') && raw.endsWith('%')) {
         final pctStr = raw.substring(1, raw.length - 1);

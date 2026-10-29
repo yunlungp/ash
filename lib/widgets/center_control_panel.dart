@@ -272,29 +272,6 @@ class CenterControlPanel extends StatelessWidget {
             onPressed: () {
               Navigator.of(ctx).pop();
               provider.manualEndGame();
-              GameOverDialog.show(
-                context: context,
-                winnerIndex: null,
-                title: '遊戲已結束',
-                reason: '玩家已手動結束對戰，所有狀態已清空鎖定。',
-                onRestart: () {
-                  CharacterSelectDialog.show(
-                    context: context,
-                    initialStartingPlayer: 0,
-                    onConfirm: ({
-                      required CharacterUnit hero1,
-                      required CharacterUnit hero2,
-                      required int startingPlayerIndex,
-                    }) {
-                      provider.restartGame(
-                        startingPlayerIndex: startingPlayerIndex,
-                        hero1: hero1,
-                        hero2: hero2,
-                      );
-                    },
-                  );
-                },
-              );
             },
             child: const Text('確定結束', style: TextStyle(color: Colors.white)),
           ),

@@ -256,8 +256,8 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('ROUND 1'), findsOneWidget);
-    expect(find.textContaining('PLAYER 1'), findsOneWidget);
-    expect(find.textContaining('PLAYER 2'), findsOneWidget);
+    expect(find.textContaining('玩家 1'), findsOneWidget);
+    expect(find.textContaining('玩家 2'), findsOneWidget);
 
     // 測試召喚小兵 (使用 Provider 召喚以驗證渲染)
     provider.summonMinion(playerIndex: 0, slotIndex: 0);
@@ -306,10 +306,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('測試護盾增減'), findsOneWidget);
-    expect(find.textContaining('目前數值: 5'), findsOneWidget);
+    expect(find.text('原值: 5'), findsOneWidget);
+    // 預設輸入框帶有原本數值 5
+    expect(find.text('5'), findsWidgets);
 
-    // 輸入 +15
-    await tester.enterText(find.byType(TextField), '+15');
+    // 透過內置鍵盤點擊 '+' 與 '1'、'5'
+    await tester.tap(find.text('+'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('5'));
     await tester.pumpAndSettle();
 
     // 點擊確定

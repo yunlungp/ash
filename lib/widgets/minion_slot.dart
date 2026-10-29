@@ -37,12 +37,17 @@ class MinionsSection extends StatelessWidget {
     final totalSpawnedByPlayer = provider.getPlayerSpawnedMinionsCount(playerIndex);
     final canSummonMore = totalSpawnedByPlayer < 3;
 
+    final hero = provider.getHero(playerIndex);
+    final isTinna = hero.presetId == 'tinna';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 被動光環指示列 (含開關)
-        _buildPassiveBuffIndicator(context, provider, aliveCount, isPlayer1),
-        const SizedBox(height: 3),
+        // 角色是 Tinna 時移除小兵數量效果指示列；其他角色則顯示
+        if (!isTinna) ...[
+          _buildPassiveBuffIndicator(context, provider, aliveCount, isPlayer1),
+          const SizedBox(height: 1.5),
+        ],
 
         // 3 個小兵槽位
         Expanded(
@@ -66,7 +71,7 @@ class MinionsSection extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 3),
+        const SizedBox(height: 1.5),
 
         // 下方操作提示：長按小兵可拖曳移動至對方小兵格子
         _buildDragDropHint(context, isPlayer1),
@@ -114,6 +119,7 @@ class MinionsSection extends StatelessWidget {
   Widget _buildPassiveBuffIndicator(BuildContext context, BattleProvider provider, int aliveCount, bool isPlayer1) {
     final color = isPlayer1 ? Colors.blueAccent : Colors.redAccent;
     final isPassiveOn = provider.isPassiveEnabled(playerIndex);
+    final hero = provider.getHero(playerIndex);
     final ui = UiScale.of(context);
 
     return Container(
@@ -158,25 +164,27 @@ class MinionsSection extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: ui.dp(4)),
-          // 右方設置開關：預設開，只有打開小兵才會根據數量增加效果，反之不增加
-          Tooltip(
-            message: isPassiveOn ? '小兵數量被動加成：已開啟' : '小兵數量被動加成：已關閉',
-            child: Transform.scale(
-              scale: ui.scale >= 1.2 ? 0.8 : 0.65,
-              child: Switch(
-                value: isPassiveOn,
-                activeThumbColor: color,
-                activeTrackColor: color.withAlpha(90),
-                inactiveThumbColor: Colors.white38,
-                inactiveTrackColor: Colors.white12,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                onChanged: (_) {
-                  provider.togglePassiveEnabled(playerIndex);
-                },
+          // 右方設置開關：eris 和 luna 取消開關 (預設保持開啟)；只有非 eris/luna (如 tinna 或自訂角色) 顯示開關供調整
+          if (hero.presetId != 'eris' && hero.presetId != 'luna') ...[
+            SizedBox(width: ui.dp(4)),
+            Tooltip(
+              message: isPassiveOn ? '小兵數量被動加成：已開啟' : '小兵數量被動加成：已關閉',
+              child: Transform.scale(
+                scale: ui.scale >= 1.2 ? 0.8 : 0.65,
+                child: Switch(
+                  value: isPassiveOn,
+                  activeThumbColor: color,
+                  activeTrackColor: color.withAlpha(90),
+                  inactiveThumbColor: Colors.white38,
+                  inactiveTrackColor: Colors.white12,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (_) {
+                    provider.togglePassiveEnabled(playerIndex);
+                  },
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'character_unit.dart';
 import 'game_log.dart';
 
@@ -41,6 +42,20 @@ class GameState {
         CharacterUnit.createHero(id: 'p1_hero', name: '玩家 1', ownerIndex: 0);
     final player2Hero = hero2 ??
         CharacterUnit.createHero(id: 'p2_hero', name: '玩家 2', ownerIndex: 1);
+
+    // eris 和 luna 的小兵數量效果預設開，tinna 預設關
+    final p1Passive = player1Hero.presetId == 'tinna' ? false : true;
+    final p2Passive = player2Hero.presetId == 'tinna' ? false : true;
+
+    // 第一回合開局能量結算：若先攻方英雄有每回合能量增減（如 Tinna），首回合起始結算其增量
+    final startingHero = startingPlayerIndex == 0 ? player1Hero : player2Hero;
+    if (startingHero.currentEnergy != null && startingHero.energyPerTurnDelta != 0) {
+      startingHero.currentEnergy = math.min(
+        startingHero.maxEnergy,
+        math.max(startingHero.minEnergy, startingHero.currentEnergy! + startingHero.energyPerTurnDelta),
+      );
+    }
+
     final startName = startingPlayerIndex == 0 ? player1Hero.name : player2Hero.name;
 
     return GameState(
@@ -50,6 +65,8 @@ class GameState {
       player2: player2Hero,
       player1Minions: [null, null, null],
       player2Minions: [null, null, null],
+      player1PassiveEnabled: p1Passive,
+      player2PassiveEnabled: p2Passive,
       logs: [
         GameLog(
           id: 'init_log',

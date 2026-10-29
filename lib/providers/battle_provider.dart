@@ -23,6 +23,7 @@ class BattleProvider extends ChangeNotifier {
   int get activePlayerIndex => _state.activePlayerIndex;
   CharacterUnit get player1 => _state.player1;
   CharacterUnit get player2 => _state.player2;
+  CharacterUnit getHero(int playerIndex) => playerIndex == 0 ? _state.player1 : _state.player2;
   List<CharacterUnit?> get player1Minions => _state.player1Minions;
   List<CharacterUnit?> get player2Minions => _state.player2Minions;
   List<GameLog> get logs => List.unmodifiable(_state.logs);
@@ -320,11 +321,43 @@ class BattleProvider extends ChangeNotifier {
     _saveSnapshot();
     unit.level = level;
     final owner = getUnitOwner(unitId);
+    final hero = getHero(owner);
+
+    // 當角色是 Tinna 時，不同 lvl 的小兵會有不同的預設數值：
+    // lv 1: atk 5, hp 10, mov 3, rng 3
+    // lv 2: atk 15, hp 40, mov 3, rng 3
+    // lv 3: atk 40, hp 100, mov 3, rng 3
+    if (hero.presetId == 'tinna' && level != null) {
+      if (level == 1) {
+        unit.baseAtk = 5;
+        unit.baseHp = 10;
+        unit.maxHp = 10;
+        unit.baseMove = 3;
+        unit.baseRange = 3;
+      } else if (level == 2) {
+        unit.baseAtk = 15;
+        unit.baseHp = 40;
+        unit.maxHp = 40;
+        unit.baseMove = 3;
+        unit.baseRange = 3;
+      } else if (level == 3) {
+        unit.baseAtk = 40;
+        unit.baseHp = 100;
+        unit.maxHp = 100;
+        unit.baseMove = 3;
+        unit.baseRange = 3;
+      }
+    }
+
     _addLog(
       playerIndex: owner,
       actorName: unit.name,
       actionTitle: '調整小兵等級',
-      detail: level != null ? '等級設定為 Lv.$level' : '已清除等級標籤',
+      detail: level != null
+          ? (hero.presetId == 'tinna' && (level >= 1 && level <= 3)
+              ? '等級設定為 Lv.$level (HP: ${unit.baseHp}, ATK: ${unit.baseAtk}, MOV: ${unit.baseMove}, RNG: ${unit.baseRange})'
+              : '等級設定為 Lv.$level')
+          : '已清除等級標籤',
       type: LogType.system,
       skipSnapshot: true,
     );
@@ -400,15 +433,26 @@ class BattleProvider extends ChangeNotifier {
     _saveSnapshot();
 
     final nextOrder = getNextSpawnOrder(playerIndex);
+    final hero = getHero(playerIndex);
+    final isTinna = hero.presetId == 'tinna';
+
     // 小兵名稱不再附帶 P1 或 P2 前綴，純粹為 "小兵" 或自訂名稱
     final minionName = customName ?? '小兵';
+    // 若英雄為 Tinna，小兵預設為 Lv.1 (atk: 5, hp: 10, mov: 3, rng: 3)
     final minion = CharacterUnit.createMinion(
       id: 'minion_${playerIndex}_${slotIndex}_${DateTime.now().millisecondsSinceEpoch}',
       name: minionName,
       slotIndex: slotIndex,
       ownerIndex: playerIndex,
       spawnOrder: nextOrder,
+      hp: isTinna ? 10 : 30,
+      atk: isTinna ? 5 : 5,
+      range: isTinna ? 3 : 1,
+      move: isTinna ? 3 : 2,
     );
+    if (isTinna) {
+      minion.level = 1;
+    }
 
     list[slotIndex] = minion;
     _recalculatePassiveMinionBuffs(playerIndex);
@@ -417,7 +461,9 @@ class BattleProvider extends ChangeNotifier {
       playerIndex: playerIndex,
       actorName: minionName,
       actionTitle: '小兵召喚',
-      detail: '召喚第 $nextOrder 隻小兵於第 ${slotIndex + 1} 槽位（HP: 30, ATK: 5, RNG: 1, MOV: 2）',
+      detail: isTinna
+          ? '召喚第 $nextOrder 隻小兵 (Lv.1) 於第 ${slotIndex + 1} 槽位（HP: 10, ATK: 5, RNG: 3, MOV: 3）'
+          : '召喚第 $nextOrder 隻小兵於第 ${slotIndex + 1} 槽位（HP: 30, ATK: 5, RNG: 1, MOV: 2）',
       type: LogType.minionSummon,
       skipSnapshot: true,
     );
