@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/character_unit.dart';
 import '../models/game_log.dart';
 import '../models/game_state.dart';
+import '../models/skill_card.dart';
 import '../models/status_effect.dart';
 import '../utils/arithmetic_parser.dart';
 
@@ -361,6 +362,10 @@ class BattleProvider extends ChangeNotifier {
       type: LogType.system,
       skipSnapshot: true,
     );
+
+    // 等級變動時同步重新計算 Tinna 技能卡 1 的等級光環被動
+    _syncPassiveSkillCardBuffs(owner);
+
     notifyListeners();
   }
 
@@ -456,6 +461,7 @@ class BattleProvider extends ChangeNotifier {
 
     list[slotIndex] = minion;
     _recalculatePassiveMinionBuffs(playerIndex);
+    _syncPassiveSkillCardBuffs(playerIndex);
 
     _addLog(
       playerIndex: playerIndex,
@@ -497,6 +503,9 @@ class BattleProvider extends ChangeNotifier {
       type: LogType.minionDismiss,
       skipSnapshot: true,
     );
+
+    // 小兵陣亡或撤退時，重新同步 Tinna 技能卡 1 等級光環
+    _syncPassiveSkillCardBuffs(playerIndex);
 
     notifyListeners();
   }
@@ -552,6 +561,364 @@ class BattleProvider extends ChangeNotifier {
       _state.player2PassiveEnabled = !_state.player2PassiveEnabled;
     }
     _recalculatePassiveMinionBuffs(playerIndex);
+    notifyListeners();
+  }
+
+  // ==========================================
+  // 技能卡與專屬技能發動系統 (Skill Cards System)
+  // ==========================================
+
+  /// 取得玩家持有的技能卡數量 (0, 1, 2)
+  int getSkillCardCopies(int playerIndex, String cardId) {
+    final map = playerIndex == 0 ? _state.player1SkillCards : _state.player2SkillCards;
+    return map[cardId] ?? 0;
+  }
+
+  /// 取得技能在當前每回合最多可發動的次數 (有兩張同樣的技能卡時，發動次數跟著倍增；固有技能固定為原次數)
+  int getMaxSkillUsesPerTurn(int playerIndex, SkillEffect effect, SkillCard card) {
+    if (card.isHeroInnate) return effect.maxUsesPerTurn;
+    final copies = getSkillCardCopies(playerIndex, card.id);
+    return effect.maxUsesPerTurn * (copies > 0 ? copies : 1);
+  }
+
+  /// 取得技能本回合已發動次數
+  int getSkillUsedCount(String effectId) {
+    return _state.turnSkillUsage[effectId] ?? 0;
+  }
+
+  /// 變更技能卡持有數量 (0, 1, 2)
+  void setSkillCardCopies({
+    required int playerIndex,
+    required String cardId,
+    required int copies,
+  }) {
+    if (_state.isGameOver) return;
+    _saveSnapshot();
+    final map = playerIndex == 0 ? _state.player1SkillCards : _state.player2SkillCards;
+    final clamped = math.max(0, math.min(2, copies));
+    map[cardId] = clamped;
+
+    _syncPassiveSkillCardBuffs(playerIndex);
+    notifyListeners();
+  }
+
+  // --- 印記 (Mark) 專屬管理 (Eris) ---
+
+  /// 取得 Eris 印記最大上限：基礎 10 + 技能卡1 (+5/張) + 技能卡2 (+5/張)
+  int getErisMaxMarks(int playerIndex) {
+    final c1 = getSkillCardCopies(playerIndex, 'eris_card_1');
+    final c2 = getSkillCardCopies(playerIndex, 'eris_card_2');
+    return 10 + (c1 * 5) + (c2 * 5);
+  }
+
+  /// 取得 Eris 當前場上印記數量
+  int getErisMarks(int playerIndex) {
+    return _state.customCounters['eris_marks_$playerIndex'] ?? 0;
+  }
+
+  /// 變更 Eris 印記數量
+  void setErisMarks(int playerIndex, int count) {
+    if (_state.isGameOver) return;
+    _saveSnapshot();
+    final maxMarks = getErisMaxMarks(playerIndex);
+    final clamped = math.max(0, math.min(maxMarks, count));
+    _state.customCounters['eris_marks_$playerIndex'] = clamped;
+    notifyListeners();
+  }
+
+  /// 取得 Eris 印記引爆傷害：基礎 10 + 技能卡1 (+5/張)
+  int getErisMarkDamage(int playerIndex) {
+    final c1 = getSkillCardCopies(playerIndex, 'eris_card_1');
+    return 10 + (c1 * 5);
+  }
+
+  /// 同步計算技能卡的被動常駐 Buff (如 Luna 技能卡 1、Tinna 技能卡 1)
+  void _syncPassiveSkillCardBuffs(int playerIndex) {
+    final hero = getHero(playerIndex);
+
+    // --- Luna 技能卡 1 被動 ---
+    if (hero.presetId == 'luna') {
+      final c1Copies = getSkillCardCopies(playerIndex, 'luna_card_1');
+      hero.effects.removeWhere((e) => e.id == 'passive_luna_c1');
+
+      if (c1Copies > 0) {
+        final bonusAtk = 20 * c1Copies;
+        final bonusMove = 1 * c1Copies;
+        hero.effects.add(
+          StatusEffect(
+            id: 'passive_luna_c1',
+            name: c1Copies > 1 ? '狂暴突破 (x2)' : '狂暴突破',
+            iconCode: 'flash',
+            atkDelta: bonusAtk,
+            moveDelta: bonusMove,
+            isPermanent: true,
+          ),
+        );
+      }
+    }
+
+    // --- Tinna 技能卡 1 被動光環 (根據場上是否有對應等級小兵) ---
+    if (hero.presetId == 'tinna') {
+      final c1Copies = getSkillCardCopies(playerIndex, 'tinna_card_1');
+      final minions = (playerIndex == 0 ? _state.player1Minions : _state.player2Minions)
+          .whereType<CharacterUnit>()
+          .toList();
+
+      final hasLv2 = minions.any((m) => m.level == 2);
+      final hasLv3 = minions.any((m) => m.level == 3);
+
+      // 清除 Tinna 本體與我方小兵的 Tinna 技能卡 1 被動
+      hero.effects.removeWhere((e) => e.id == 'passive_tinna_c1_hero');
+      for (final m in minions) {
+        m.effects.removeWhere((e) => e.id == 'passive_tinna_c1_minion');
+      }
+
+      if (c1Copies > 0) {
+        // LV2: 緹娜步數 +1 (持有2張則 +2)
+        final moveBonus = hasLv2 ? (1 * c1Copies) : 0;
+        // LV3: 我方全體單位攻擊力 +5 (持有2張則 +10)
+        final atkBonus = hasLv3 ? (5 * c1Copies) : 0;
+
+        if (moveBonus > 0 || atkBonus > 0) {
+          hero.effects.add(
+            StatusEffect(
+              id: 'passive_tinna_c1_hero',
+              name: c1Copies > 1 ? '等級連鎖 (x2)' : '等級連鎖',
+              iconCode: 'flash',
+              moveDelta: moveBonus,
+              atkDelta: atkBonus,
+              isPermanent: true,
+            ),
+          );
+        }
+
+        if (atkBonus > 0) {
+          for (final m in minions) {
+            m.effects.add(
+              StatusEffect(
+                id: 'passive_tinna_c1_minion',
+                name: c1Copies > 1 ? '等級連鎖 (x2)' : '等級連鎖',
+                iconCode: 'flash',
+                atkDelta: atkBonus,
+                isPermanent: true,
+              ),
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /// 發動技能效果
+  void executeSkill({
+    required int playerIndex,
+    required SkillCard card,
+    required SkillEffect effect,
+    CharacterUnit? targetUnit,
+    int? deductHpCost,
+  }) {
+    if (_state.isGameOver) return;
+    final hero = getHero(playerIndex);
+
+    // 檢查次數
+    final maxUses = getMaxSkillUsesPerTurn(playerIndex, effect, card);
+    final usedCount = getSkillUsedCount(effect.id);
+    if (usedCount >= maxUses) return;
+
+    _saveSnapshot();
+
+    // 1. 扣除生命代價 (優先採用直接傳入的自訂代價，例如印記穿梭選擇扣除 20 生命)
+    final actualHpCost = deductHpCost ?? effect.hpCost;
+    if (actualHpCost > 0) {
+      hero.baseHp = math.max(0, hero.baseHp - actualHpCost);
+    }
+
+    // 2. 針對具體技能效果進行業務邏輯處理
+    String actionDetail = '';
+
+    // [Luna 固有 - 攻擊強化]
+    if (effect.id == 'luna_innate_1' && targetUnit != null) {
+      targetUnit.effects.removeWhere((e) => e.id == 'buff_luna_innate_1');
+      targetUnit.effects.add(
+        const StatusEffect(
+          id: 'buff_luna_innate_1',
+          name: 'Luna 攻擊強化',
+          iconCode: 'flash',
+          atkDelta: 5,
+          turnsRemaining: 1,
+        ),
+      );
+      actionDetail = '指定【${targetUnit.name}】攻擊力 +5 (持續至本回合結束)';
+    }
+    // [Luna 固有 - 位置交換]
+    else if (effect.id == 'luna_innate_2' && targetUnit != null) {
+      actionDetail = '扣除 10 HP，與【${targetUnit.name}】交換戰鬥位置';
+    }
+    // [Luna 技能卡 1 - 瀕死替換]
+    else if (effect.id == 'luna_c1_eff2') {
+      // 丟棄一張卡片
+      final curCopies = getSkillCardCopies(playerIndex, card.id);
+      if (curCopies > 0) {
+        final map = playerIndex == 0 ? _state.player1SkillCards : _state.player2SkillCards;
+        map[card.id] = curCopies - 1;
+        _syncPassiveSkillCardBuffs(playerIndex);
+      }
+      actionDetail = targetUnit != null
+          ? '棄置一張【${card.name}】，抵消傷害並與【${targetUnit.name}】交換位置'
+          : '棄置一張【${card.name}】，抵消一次傷害';
+    }
+    // [Luna 技能卡 2 - 契約檢索]
+    else if (effect.id == 'luna_c2_eff1') {
+      actionDetail = '支付 20 HP，從卡組或墓地將契約卡加入手牌';
+    }
+    // [Luna 技能卡 2 - 怪物獻祭回血30]
+    else if (effect.id == 'luna_c2_eff2' && targetUnit != null) {
+      hero.baseHp = math.min(hero.maxHp, hero.baseHp + 30);
+      final owner = getUnitOwner(targetUnit.id);
+      if (targetUnit.slotIndex != null) {
+        dismissMinion(
+          playerIndex: owner,
+          slotIndex: targetUnit.slotIndex!,
+          isKilled: true,
+        );
+      }
+      actionDetail = '獻祭【${targetUnit.name}】，${hero.name} 回復 30 點生命值';
+    }
+    // [Eris 固有 - 放置印記]
+    else if (effect.id == 'eris_innate_1') {
+      final curMarks = getErisMarks(playerIndex);
+      final maxMarks = getErisMaxMarks(playerIndex);
+      final newMarks = math.min(maxMarks, curMarks + 1);
+      _state.customCounters['eris_marks_$playerIndex'] = newMarks;
+      actionDetail = '在攻擊範圍內的 1 個格子放置印記（場上印記: $newMarks / $maxMarks）';
+    }
+    // [Eris 固有 - 替罪轉移]
+    else if (effect.id == 'eris_innate_2' && targetUnit != null) {
+      final owner = getUnitOwner(targetUnit.id);
+      if (targetUnit.slotIndex != null) {
+        dismissMinion(
+          playerIndex: owner,
+          slotIndex: targetUnit.slotIndex!,
+          isKilled: true,
+        );
+      }
+      actionDetail = '犧牲【${targetUnit.name}】抵消傷害，並可移動敵方攻擊單位 4 格';
+    }
+    // [Eris 技能卡 1 - 印記穿梭]
+    else if (effect.id == 'eris_c1_eff3') {
+      actionDetail = actualHpCost > 0
+          ? '支付 20 HP，傳送至任意印記格子'
+          : '釋放已佔領的佔領點，傳送至任意印記格子';
+    }
+    // [Tinna 固有 - 能量/生命召喚 Lv.1 小兵]
+    else if (effect.id == 'tinna_innate_2') {
+      final isEnergy = deductHpCost == null || deductHpCost == 0;
+      if (isEnergy) {
+        hero.currentEnergy = math.max(0, (hero.currentEnergy ?? 0) - 2);
+      }
+      actionDetail = isEnergy
+          ? '消耗 2 點能量召喚一隻 Lv.1 小兵'
+          : '消耗 10 點生命值召喚一隻 Lv.1 小兵';
+    }
+    // [Tinna 技能卡 2 - 致命傷害抵消]
+    else if (effect.id == 'tinna_c2_eff') {
+      actionDetail = targetUnit != null
+          ? '犧牲【${targetUnit.name}】代替破壞，抵消致命傷害並傳送至我方出生點/佔領點'
+          : '破壞【${card.name}】，抵消致命傷害並傳送至我方出生點/佔領點';
+    } else {
+      actionDetail = '發動效果：${effect.name}';
+    }
+
+    // 3. 記錄發動次數
+    _state.turnSkillUsage[effect.id] = usedCount + 1;
+
+    // 4. 寫入戰鬥紀錄
+    _addLog(
+      playerIndex: playerIndex,
+      actorName: hero.name,
+      actionTitle: '技能發動【${effect.name}】',
+      detail: actionDetail,
+      type: LogType.skill,
+      skipSnapshot: true,
+    );
+
+    _checkGameOver();
+    notifyListeners();
+  }
+
+  /// Eris 踩中印記引爆傷害結算
+  void triggerErisMarkDamage({
+    required int playerIndex,
+    required CharacterUnit targetUnit,
+    required int marksToConsume,
+  }) {
+    if (_state.isGameOver) return;
+    final hero = getHero(playerIndex);
+    final curMarks = getErisMarks(playerIndex);
+    final count = math.min(curMarks, math.max(1, marksToConsume));
+
+    _saveSnapshot();
+
+    // 計算傷害：每枚印記傷害 (基礎 10 + 技能卡1加成)
+    final perMarkDmg = getErisMarkDamage(playerIndex);
+    final totalDmg = perMarkDmg * count;
+
+    // 扣除印記
+    _state.customCounters['eris_marks_$playerIndex'] = curMarks - count;
+
+    // 扣除目標生命
+    final oldHp = targetUnit.baseHp;
+    targetUnit.baseHp = math.max(0, targetUnit.baseHp - totalDmg);
+
+    _addLog(
+      playerIndex: playerIndex,
+      actorName: hero.name,
+      actionTitle: '印記引爆',
+      detail: '消耗 $count 個印記，對【${targetUnit.name}】造成 $totalDmg 傷害 (HP $oldHp ➔ ${targetUnit.baseHp})，剩餘印記: ${curMarks - count}',
+      type: LogType.skill,
+      skipSnapshot: true,
+    );
+
+    _checkGameOver();
+    notifyListeners();
+  }
+
+  /// Eris 回收印記兌換效果 (4: 傳送, 5: 回復20血, 10: 佔領任意佔領點)
+  void recycleErisMarks({
+    required int playerIndex,
+    required int tierMarks, // 4, 5, 10
+  }) {
+    if (_state.isGameOver) return;
+    final hero = getHero(playerIndex);
+    final curMarks = getErisMarks(playerIndex);
+    if (curMarks < tierMarks) return;
+
+    _saveSnapshot();
+
+    // 扣除指定數量印記
+    _state.customCounters['eris_marks_$playerIndex'] = curMarks - tierMarks;
+
+    String effectDetail = '';
+    if (tierMarks == 4) {
+      effectDetail = '回收 4 個印記：傳送至任意印記格子';
+    } else if (tierMarks == 5) {
+      final oldHp = hero.baseHp;
+      hero.baseHp = math.min(hero.maxHp, hero.baseHp + 20);
+      effectDetail = '回收 5 個印記：${hero.name} 回復 20 HP (HP $oldHp ➔ ${hero.baseHp})';
+    } else if (tierMarks == 10) {
+      effectDetail = '回收 10 個印記：獲得任意佔領點之佔領權（含對方佔領點）';
+    }
+
+    _addLog(
+      playerIndex: playerIndex,
+      actorName: hero.name,
+      actionTitle: '印記回收',
+      detail: '$effectDetail，剩餘印記: ${curMarks - tierMarks}',
+      type: LogType.skill,
+      skipSnapshot: true,
+    );
+
+    _checkGameOver();
     notifyListeners();
   }
 
@@ -653,6 +1020,48 @@ class BattleProvider extends ChangeNotifier {
           actionTitle: '能量結算',
           detail: '每回合能量變化: $oldEnergy ➔ $newEnergy (${unit.energyPerTurnDelta > 0 ? "+${unit.energyPerTurnDelta}" : "${unit.energyPerTurnDelta}"})',
           type: LogType.system,
+          skipSnapshot: true,
+        );
+      }
+    }
+
+    // 4. 重設該回合技能卡主動發動次數
+    _state.turnSkillUsage.clear();
+
+    // 5. 處理 Tinna 技能卡 1【LV1 護盾只在對方回合生效】：
+    // 當切換到自己的回合時，對方回合結束，清除 Tinna 的臨時護盾
+    if (incomingHero.presetId == 'tinna') {
+      incomingHero.effects.removeWhere((e) => e.id == 'shield_tinna_c1');
+    }
+
+    // 當對方回合開始時（即剛剛結束行動的玩家回合），若對手是 Tinna 且有 Lv.1 小兵與技能卡 1，獲得 +5 (或 +10) 護盾
+    final waitingPlayerIndex = previousActingPlayer;
+    final waitingHero = getHero(waitingPlayerIndex);
+    if (waitingHero.presetId == 'tinna') {
+      final c1Copies = getSkillCardCopies(waitingPlayerIndex, 'tinna_card_1');
+      final waitingMinions = (waitingPlayerIndex == 0 ? _state.player1Minions : _state.player2Minions)
+          .whereType<CharacterUnit>()
+          .toList();
+      final hasLv1 = waitingMinions.any((m) => m.level == 1);
+
+      waitingHero.effects.removeWhere((e) => e.id == 'shield_tinna_c1');
+      if (c1Copies > 0 && hasLv1) {
+        final shieldAmount = 5 * c1Copies;
+        waitingHero.effects.add(
+          StatusEffect(
+            id: 'shield_tinna_c1',
+            name: c1Copies > 1 ? '守護壁壘 (x2)' : '守護壁壘',
+            iconCode: 'shield',
+            shieldDelta: shieldAmount,
+            isPermanent: true, // 在對方回合內常駐生效，輪回到自己回合時由上面第 5 點自動移除
+          ),
+        );
+        _addLog(
+          playerIndex: waitingPlayerIndex,
+          actorName: waitingHero.name,
+          actionTitle: '技能卡1【Lv.1連鎖】',
+          detail: '對方回合開始，${waitingHero.name} 獲得 $shieldAmount 點護盾（對方回合結束時消退）',
+          type: LogType.skill,
           skipSnapshot: true,
         );
       }

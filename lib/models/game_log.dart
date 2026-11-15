@@ -13,6 +13,7 @@ enum LogType {
   undo,
   gameOver,
   system,
+  skill,
 }
 
 class GameLog {
@@ -62,6 +63,8 @@ class GameLog {
         return Colors.redAccent;
       case LogType.system:
         return Colors.white70;
+      case LogType.skill:
+        return Colors.purpleAccent;
     }
   }
 
@@ -91,6 +94,8 @@ class GameLog {
         return Icons.emoji_events;
       case LogType.system:
         return Icons.info_outline;
+      case LogType.skill:
+        return Icons.auto_awesome;
     }
   }
 

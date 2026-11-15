@@ -17,6 +17,14 @@ class GameState {
   int? winnerIndex; // 0, 1 或 null
   String? gameOverReason;
 
+  // 技能卡裝備與使用記錄: cardId -> 持有數量 (0, 1, 2)
+  Map<String, int> player1SkillCards;
+  Map<String, int> player2SkillCards;
+  // 本回合技能效果已發動次數: skillEffectId -> 已發動次數
+  Map<String, int> turnSkillUsage;
+  // 特殊計數器 (如 Eris 印記數量等): 'eris_marks_0' / 'eris_marks_1'
+  Map<String, int> customCounters;
+
   GameState({
     this.roundNumber = 1,
     this.activePlayerIndex = 0,
@@ -30,7 +38,15 @@ class GameState {
     this.isGameOver = false,
     this.winnerIndex,
     this.gameOverReason,
-  }) : logs = logs ?? [];
+    Map<String, int>? player1SkillCards,
+    Map<String, int>? player2SkillCards,
+    Map<String, int>? turnSkillUsage,
+    Map<String, int>? customCounters,
+  })  : logs = logs ?? [],
+        player1SkillCards = player1SkillCards ?? {},
+        player2SkillCards = player2SkillCards ?? {},
+        turnSkillUsage = turnSkillUsage ?? {},
+        customCounters = customCounters ?? {};
 
   /// 建立初始遊戲狀態，可指定先攻方與雙方英雄
   factory GameState.initial({
@@ -98,6 +114,10 @@ class GameState {
       isGameOver: isGameOver,
       winnerIndex: winnerIndex,
       gameOverReason: gameOverReason,
+      player1SkillCards: Map<String, int>.from(player1SkillCards),
+      player2SkillCards: Map<String, int>.from(player2SkillCards),
+      turnSkillUsage: Map<String, int>.from(turnSkillUsage),
+      customCounters: Map<String, int>.from(customCounters),
     );
   }
 

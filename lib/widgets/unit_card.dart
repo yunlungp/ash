@@ -7,6 +7,7 @@ import '../utils/ui_scale.dart';
 import 'dialogs/arithmetic_input_dialog.dart';
 import 'dialogs/effect_dialog.dart';
 import 'dialogs/energy_config_dialog.dart';
+import 'dialogs/skill_dialog.dart';
 import 'hexagon_avatar.dart';
 
 class UnitCard extends StatelessWidget {
@@ -130,6 +131,38 @@ class UnitCard extends StatelessWidget {
                 ),
               ),
             ),
+            // 英雄專屬技能/技能卡入口按鈕 (以金黃色小標籤呈現)
+            InkWell(
+              onTap: () => SkillDialog.show(
+                context: context,
+                playerIndex: isPlayer1 ? 0 : 1,
+              ),
+              borderRadius: BorderRadius.circular(ui.dp(3)),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: ui.dp(5), vertical: ui.dp(1.5)),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withAlpha(45),
+                  borderRadius: BorderRadius.circular(ui.dp(3)),
+                  border: Border.all(color: Colors.amberAccent.withAlpha(160), width: 0.8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome, size: ui.dp(10), color: Colors.amberAccent),
+                    SizedBox(width: ui.dp(2)),
+                    Text(
+                      '技能',
+                      style: TextStyle(
+                        color: Colors.amberAccent,
+                        fontSize: ui.sp(9),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: ui.dp(4)),
             // 行動中的 label 整合在角色名字同一行
             if (isActiveTurn)
               Container(
