@@ -62,7 +62,7 @@ jobs:
         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
     - name: Build APK
-      run: flutter build apk --release
+      run: flutter build apk --release --android-skip-build-dependency-validation
       env:
         KEYSTORE_PATH: "upload-keystore.jks"
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
