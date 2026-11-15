@@ -43,11 +43,11 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    # 5. 设置 Flutter 环境
+    # 5. 设置 Flutter 环境 (锁定与本地开发环境一致的版本，避免官方 stable 更新引起 Gradle/AGP 不兼容)
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        channel: 'stable'
+        flutter-version: '3.47.6'
         cache: true
 
     # 6. 获取依赖并准备签名金钥，然后打包 Release APK
